@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 
 class ProjectController extends Controller
@@ -61,15 +62,24 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Projects/Create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        // 1. O Middleware 'honeypot' já está a agir aqui via routes
+
+        // 2. Validação rigorosa
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|in:planeamento,execucao,concluido',
+        ]);
+
+        // 3. Criar associado ao user autenticado (Proteção de posse)
+        $request->user()->projects()->create($validated);
+
+        return redirect()->route('projects.index')->with('success', 'Projeto criado!');
     }
 
 
