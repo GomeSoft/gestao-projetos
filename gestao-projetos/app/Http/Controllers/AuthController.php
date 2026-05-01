@@ -10,16 +10,16 @@ class AuthController extends Controller
     /**
      * Logout Seguro: Revoga todos os tokens do utilizador.
      */
+    // app/Http/Controllers/AuthController.php
+
     public function logout(Request $request)
     {
-        // 1. Revogação física do token na base de dados
-        $request->user()->tokens()->delete();
+        // Revoga o token atual para que não possa ser reutilizado
+        $request->user()->currentAccessToken()->delete();
 
-        // 2. Limpeza da sessão do Laravel (se aplicável)
-        Auth::guard('web')->logout();
+        // Se quiseres invalidar TODOS os dispositivos do user:
+        // $request->user()->tokens()->delete();
 
-        return response()->json([
-            'message' => 'Logout efetuado e tokens revogados com sucesso.'
-        ]);
+        return redirect('/login');
     }
 }
