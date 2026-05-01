@@ -9,6 +9,9 @@ export default function Dashboard({ projects }) {
             <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <h1 className="text-2xl font-bold mb-6">Os Meus Projetos</h1>
+                    <Link href="/projects/create" className="text-blue-500 hover:underline font-medium">
+                        Criar Projeto
+                    </Link>
 
                     {/* Proteção XSS: O React escapa automaticamente estas variáveis */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
