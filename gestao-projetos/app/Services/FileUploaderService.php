@@ -3,37 +3,36 @@
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class FileUploaderService
 {
-    // Lista de Magic Bytes permitidos (Ex: JPG, PNG, PDF)
-    private const ALLOWED_SIGNATURES = [
+    // Mapeamento de Magic Bytes (Assinaturas Binárias)
+    private const ALLOWED_TYPES = [
         'ffd8ffe0' => 'image/jpeg',
         'ffd8ffe1' => 'image/jpeg',
         '89504e47' => 'image/png',
-        '25504446' => 'application/pdf',
+        '47494638' => 'image/gif',
     ];
 
-    public function uploadSecuro(UploadedFile $file, string $folder)
+    public function uploadValidado(UploadedFile $file, string $folder)
     {
-        // 1. Validar Magic Bytes (Leitura binária)
+        // 1. Validar Magic Bytes (Independente da extensão do frontend)
         $path = $file->getPathname();
         $handle = fopen($path, 'rb');
-        $bytes = bin2hex(fread($handle, 4));
+        $header = fread($handle, 4); // Lemos os primeiros 4 bytes
         fclose($handle);
+        
+        $signature = bin2hex($header);
 
-        if (!isset(self::ALLOWED_SIGNATURES[$bytes])) {
-            throw new Exception("Tipo de ficheiro inválido: Assinatura não reconhecida.");
+        if (!isset(self::ALLOWED_TYPES[$signature])) {
+            throw new Exception("Segurança: O ficheiro não corresponde à assinatura visual real.");
         }
 
-        // 2. Tratar trackers e metadados (Simulação de limpeza)
-        // Em produção, usaríamos bibliotecas como o ExifTool para remover GPS/Trackers
-        // 3. Gerar nome aleatório (Nunca usar o nome original para evitar Path Traversal)
-        $fileName = bin2hex(random_bytes(16)) . '.' . $file->getClientOriginalExtension();
+        // 2. Gerar nome aleatório para evitar Path Traversal
+        $safeName = bin2hex(random_bytes(16)) . '.' . $file->getClientOriginalExtension();
 
-        // 4. Armazenar fora da pasta pública por defeito (Segurança de camadas)
-        return $file->storeAs($folder, $fileName, 'private');
+        // 3. Guardar no disco 'private' (não acessível diretamente por URL)
+        return $file->storeAs($folder, $safeName, 'private');
     }
 }
